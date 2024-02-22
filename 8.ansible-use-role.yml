@@ -1,0 +1,14 @@
+# vim roles.yml
+---
+- name: Use phpinfo
+  hosts: webservers
+  roles:
+  - phpinfo
+- name: Use balancers
+  hosts: balancers
+  roles:
+  - balancer
+
+# ansible-navigator run roles.yml -m stdout
+# verify
+# curl http://node5

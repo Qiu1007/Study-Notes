@@ -1,0 +1,22 @@
+# vim issue.yml
+--- 
+- name: modify file
+  hosts: all
+  tasks:
+  - name: Content1
+    ansible.builtin.copy:
+      content: 'Delevopment'
+      dest: /etc/issue
+  when: inventory_name in groups.dev
+  - name: Content2
+    ansible.builtin.copy:
+      content: 'Test'
+      dest: /etc/issue
+  when: inventory_name in groups.test
+  - name: Content3
+    ansible.builtin.copy:
+      content: 'Production'
+      dest: /etc/issue
+  when: inventory_name in groups.prod
+# ansible-navigator run issue.yml -m stdout
+# ansible dev,test,prod -m shell -a 'cat /etc/issue'

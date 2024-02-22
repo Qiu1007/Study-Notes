@@ -1,0 +1,26 @@
+# ssh greg@control
+# sudo yum -y install ansible-core ansible-navigator
+
+# mkdir /home/greg/ansible/roles
+# cd ansible
+# mkdir mycollection
+
+# cat /etc/ansible/config
+# ansible init --disabled > /home/greg/ansible/ansible.cfg
+# vim ansible.cfg
+#inventory = /home/greg/ansible/inven
+# remote_user
+# host_key_
+# roles_path
+# colletcions_
+# become=
+
+# vim inventory
+
+# ansible-galaxy --list
+# ansible-inventory  --graph
+# ansible all -m ping
+# podman login utility... -u admin -p redhat
+# ansible-inventory images
+# ansible-inventory  collections
+

@@ -1,0 +1,113 @@
+1.
+ssh greg@control 
+sudo yum -y install ansible-core ansible-navigator
+
+mkdir -p /home/greg/ansible/roles
+mkdir -p /home/greg/ansible/mycollection
+
+cat /etc/ansible/ancible.cfg
+ansible-config init --disable > /home/greg/ansible/ansible.cfg
+
+vim ansible.cfg
+
+inventory = /home/gerg/ansible/inventory
+remote_user = greg
+host_key_check = False
+roles_path= /home/greg/ansible/roles:/usr/share/ansible/roles
+collections_path= /home/greg/ansible/mycollection/:.ansible/.../:/ect/ansible/collections
+become=True
+
+ansible --version
+ansible-galaxy list
+
+vim inventory
+[dev]
+node1
+
+[test]
+node2
+
+[prod]
+node3
+node4
+
+[webserver:children]
+prod
+
+ansible-inventory --graph
+ansible all -m ping
+podman login utilily.lab.example -u admin -p redhat
+ansible-navigator images
+ansible-navigator collections
+
+
+2.
+echo set nu ts=2 et cuc sw=2 autoindent > ~/.vimrc
+vim yum_repo.yml
+---
+- name: install yum
+  hosts: all
+  tasks:
+  - yum_repository:
+      file: EX294_BASE
+      name: EX294_BASE
+      description: "EX294 base software"
+      baseurl: http://content/rhel9.0/x86_64/dvd/BaseOS
+      gpgcheck: yes
+      gpgkey: http://content/rhel9.0/x86_64/dvd/RPM-GPG-KE
+      enabled: yes
+
+  - yum_repository:
+      file: EX294_STREAM
+      name: EX294_STREAM
+      description: "EX294 stream software"
+      baseurl: http://content/rhel9.0/x86_64/dvd/AppStream
+      gpgcheck: yes
+      gpgkey: http://content/rhel9.0/x86_64/dvd/RPM-GPG-KE
+      enabled: yes
+
+ansible-navigator run yum_repo.yml -m stdout
+ansible all -m shell -a 'yum repoinfo'
+ansible all -m shell -a 'yum -y install ftp'
+ansible all -m shell -a 'rpm -q ftp'
+
+
+3.
+vim packages.yml
+---
+- name: install 1
+  hosts: dev,test,prod
+  tasks:
+  - name: isntall packages
+    ansible.builtin.yum:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+      - php 
+      - mariadb
+
+- name: install2
+  hosts: dev
+  tasks:
+  - name: install group
+    ansible.builtin.yum:
+      name: '@RPM Development Tools'
+      state: present
+  - name: install packages
+    ansible.builtin.yum:
+      name: '*'
+      state: latest
+ansible-navigator run packages.yml -m stdout
+ansible dev,prod,test -m shell -a 'rpm -q php mariadb'
+ansible dev -m shell -a 'yum grouplist'
+ansible dev -m shell -a 'yum update'
+
+
+4.
+sudo yum search rhel-roles-system
+sudo yum -y install rhel-roles-system
+cp -r /usr/share/doc/rhel-system-roles/selinux/selinux.yml  /home/greg/ansible/selinux.yml
+ansible-playbook selinux.yml
+greg ^SELINUX= /etc/selinux/config; getenforce;
+ansible all -m shell -a 'greg ^SELINUX= /etc/ansible/selinux; getenforce'

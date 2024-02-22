@@ -1,0 +1,48 @@
+# cd roles
+# ansible-galaxy role init apache
+# ansible-galaxy list
+# cd ..
+# vim roles/apache/tasks/main.yml
+---
+- name: Install apache
+  ansible.builtin.yum:
+    name: httpd
+    state: latest
+
+- name: Start httpd
+  ansible.builtin.systemd:
+    name: httpd
+    state: started
+    enabled: yes
+
+- name: Start firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Start Apache
+  ansible.posix.firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+- template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+
+# vim roles/apache/templates/index.html.j2
+Welcome to {{ ansible_nodename }} on {{ansible_default_ipv4.address }}
+
+# vim /home/greg/ansible/apache.yml
+---
+- name: webservers role
+  hosts: webservers
+  roles:
+  - apache
+
+# ansible-navigator run apache.yml -m stdout
+# ansible webservers --list-roles
+# curl http://node3
+# curl http://node4

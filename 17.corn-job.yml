@@ -1,0 +1,15 @@
+# ansible-doc -l |grep cron
+# ansible-doc cron
+# vim cron.yml
+---
+- name: cron
+  hosts: test
+  tasks:
+  - name: cron job
+    cron: 
+      name: "cron job1"
+      minute: "*/2"
+      job: 'logger "EX200 in progress"'
+      users: natasha
+# ansible-navigator run cron.yml -m stdout
+# ansible test -a 'crontab -l -u natasha'

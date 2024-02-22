@@ -1,0 +1,28 @@
+# vim packages.yml
+---
+- name: install 1
+  hosts: dev,test,prod
+  tasks:
+  - name: install packages
+    ansible.builtin.yum:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+      - php
+      - mariadb
+- name: install 2
+  hosts: dev
+    - name: install groups
+      ansible.builtin.yum:
+        name: "@RPM Development Tools"
+        state: present
+    - name: install packages:
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+  
+# ansible-navigator run packages.yml -m stdout
+# ansible dev,test,prod -a 'rpm -q php mariadb'
+# ansible dev -a 'yum grouplist'
+# ansible dev -a 'yum update'
