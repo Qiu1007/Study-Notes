@@ -111,3 +111,131 @@ cp -r /usr/share/doc/rhel-system-roles/selinux/selinux.yml  /home/greg/ansible/s
 ansible-playbook selinux.yml
 greg ^SELINUX= /etc/selinux/config; getenforce;
 ansible all -m shell -a 'greg ^SELINUX= /etc/ansible/selinux; getenforce'
+
+
+5.
+vim requirements.yml
+---
+collections:
+- src: http://classroom/materials/redhat-insights-1.0.7.tar.gz
+- src: http://classroom/materials/community-general-5.5.0.tar.gz
+- src: http://classroom/materials/redhat-rhel_system_roles-1.19.3.tar.gz
+
+ansible-galaxy collection install -r requirements.yml -p /home/greg/ansible/mycollection
+ansible-navigator collections
+ansible-navigator doc community.general.filesystem -m stdout
+
+
+6.
+vim /home/greg/ansible/roles/requirements.yml
+---
+- src: http://classroom/materials/haproxy.tar
+  name: balancer
+- src: http://classroom/materials/phpinfo.tar
+  name: phpinfo
+ansible-galaxy install -r roles/requirements.yml 
+ansible-galaxy list
+
+7.
+ansible-galaxy roles init --init-path ./roles apache
+ansible-galaxy
+vim ./roles/apache/taks/main.yml
+---
+- name: install httpd
+  ansible.builtin.yum:
+    name: httpd
+    state: latest
+
+- name: start apache
+  ansible.builtin.systemd:
+    name: httpd
+    state: started
+    enabled: yes
+
+- name: start firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: start service
+  ansible.posix.firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+- template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+
+vim  /roles/apache/templates/index.html.j2
+Welcome to {{ ansible_nodename }} on {{ ansible_default_ipv4.address }}
+
+vim apache.yml
+---
+- name: webservers role
+  tasks: webservers
+  roles:
+  - apache
+ansible-navigator run apache.yml -m stdout 
+ansible webservers --list-hosts
+curl http://node3
+curl http://node4
+
+8.
+vim roles.yml
+--- 
+- name: use webservers
+  hosts: webservers
+  roles:
+  - phpinfo
+
+- name: use balancers
+  hosts: balancers
+  roles:
+  - balancer
+
+ansible-navigator run roles.yml -m stdout
+curl http://node5
+
+
+
+9.
+vim lv.yml
+---
+- name: create lvm
+  hosts: all
+  tasks:
+  - block
+    - name: create 1500m
+      community.general.lvol:
+        lv: research
+        vgs: data
+        size: 1500
+    - name: create ext4
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/research/data
+    
+    rescue:
+    - name: Could not creat lvm
+      ansible.builtin.debug:
+        msg: Could not create logical volume of that size
+    - name: Create 800m
+      community.general.lvol:
+        lv: research
+        vgs: data
+        size: 800
+    - name: create ext4
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/research/data
+    when: ansible_lvm.vgs.research is defined
+  - debug:
+      msg: Volume group done not exist
+    when: ansible_lvm.vgs.research is not defined
+
+ansible-navigator run lv.yml -m stdout
+ansible all  -m shell -a 'lvs'
+ansible all -m shell -a 'blikid /dev/research/data'
