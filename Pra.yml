@@ -1,49 +1,42 @@
-
 1.
 ssh greg@control
-sudo yum -y install ansible-navigator ansible-core
-mkdir -p /home/greg/ansible/roles
-mkdir -p /home/greg/ansible/mycollection
-cd ansible
+
+sudo yum -y install ansible-core ansible-navigator
+mkdir -p /home/greg/ansible/inventory
+cd ansible 
 cat /etc/ansible/ansible.cfg
 ansible-config init --disabled > /home/greg/ansible/ansible.cfg
 vim ansible.cfg
-
-inventory = /home/greg/ansible/inventory
-remote_user =greg
-host_key_check = False
-roles_path = /home/greg/ansible/roles:/usr/share/ansible/roles
-collections_path = /home/greg/ansible/mycollection:.ansible/collections:/usr/share/collections
-become = True
-
+inventory =/home/greg/ansible/inventory
+remote_user= greg
+host_key_checking =False
+roles_path =/home/greg/ansible/roles:/usr/share/ansible/roles
+collections_path= /home/greg/ansible/mycollection/:.ansible/collections:/usr/share/ansible/collections
+become=True
 ansible --version
 ansible-galaxy list
+
 vim inventory
 [dev]
 node1
-
 [test]
 node2
-
 [prod]
 node3
 node4
-
 [balancers]
 node5
-
 [webservers:children]
 prod
 
 ansible-inventory --graph
 ansible all -m ping
-podman login utility.lab.example -u admin -p passwd
+podman login utility.example.lab -u admin -p redhat
 ansible-navigator images
-ansible-navigator collections
+ansible-navigator collection
 
 
 2.
-echo set nut ts=2 et cuc sw=2 autoindent > ~/.vimrc
 vim yum_repo.yml
 ---
 - name: yum_repository
@@ -55,7 +48,7 @@ vim yum_repo.yml
       description: "EX294 base software"
       baseurl: http://content/rhel9.0/x86_64/dvd/BaseOS
       gpgcheck: yes
-      gpg_key: http://content/rhel9.0/x86_64/dvd/RPM-GPG-KEY-RPM-GPG-KEY-redhat-release
+      gpgkey: http://content/rhel9.0/x86_64/dvd/RPM-GPG-KEY-redhat-release
       enabled: yes
   - yum_repository:
       file: EX294_STREAM
@@ -63,11 +56,11 @@ vim yum_repo.yml
       description: "EX294 stream software"
       baseurl: http://content/rhel9.0/x86_64/dvd/AppStream
       gpgcheck: yes
-      gpg_key: http://content/rhel9.0/x86_64/dvd/RPM-GPG-KEY-RPM-GPG-KEY-redhat-release
+      gpgkey: http://content/rhel9.0/x86_64/dvd/RPM-GPG-KEY-redhat-release
       enabled: yes
 ansible-navigator run yum_repo.yml -m stdout
 ansible all -m shell -a 'yum repoinfo'
-ansible all -m shell -a 'yum -y install ftp'
+ansible all -m shell -a 'yum install -y ftp'
 ansible all -m shell -a 'rpm -q ftp'
 
 
@@ -83,16 +76,16 @@ vim packages.yml
       state: present
     vars:
       packages:
-      - php
+      - php 
       - mariadb
-- name: install1
-  hosts: dev
+- name: install2
+  hosts: dev  
   tasks:
   - name: install group
     ansible.builtin.yum:
-      name: "@RPM Development Tools"
+      name: '@RPM Development Tools'
       state: present
-  - name: install packages
+  - name: upgrade packages
     ansible.builtin.yum:
       name: '*'
       state: latest
@@ -102,41 +95,43 @@ ansible dev -m shell -a 'yum grouplist'
 ansible dev -m shell -a 'yum update'
 
 
-4. 
-yum search role
-sudo yum -y install rhel_system_roles
-cp /usr/share/doc/rhel_system_roles/selinux/example.selinux.yml /home/greg/ansible/selinux.yml
+4.
+yum search roles
+sudo yum -y install rhel-system-roles
+cp /usr/share/doc/rhel-system-roles/example.selinux.yml  /home/greg/ansible/selinux.yml 
 ansible-playbook selinux.yml
-ansible all -m shell -a 'grep ^SELINUX= /etc/selinux/config ; getenforce'
+ansible all -m shell -a 'grep ^SELINUX= /etc/selinux/config ;getenforce'
 
-5. vim requirements.yml
+
+5.
+vim requirements.yml
 ---
-collections:
-- src: http://classroom/materials/redhat-insights-1.0.7.tar.gz
-- src: http://classroom/materials/community-general-5.5.0.tar.gz
-- src: http://classroom/materials/redhat-rhel_system_roles-1.19.3.tar.gz
+collections
+- name: http://classroom/materials/redhat-insights-1.0.7.tar.gz
+- name: http://classroom/materials/community-general-5.5.0.tar.gz
+- name: http://classroom/materialsredhat-rhel_system_roles-1.19.3.tar.gz
 
-ansible-naviggalaxy  collection install -r requirements.yml -p /home/greg/ansible/mycollection
-ansible-naviagator collections
+ansible-galaxy collection install -r requirements.yml -p /home/greg/ansible/mycollection
+
+ansible-galaxy --list
 ansible-navigator doc community.general.filesystem -m stdout
 
 
 6.
-vim roles/requirements.yml
+vim role.requirements.yml
 ---
 - src: http://classroom/materials/haproxy.tar 
   name: balancer
-- src: http://classroom/materials/phpinfo.tar
+- src: http://classroom/materials/phpinfo.tar 
   name: phpinfo
-ansible-galaxy install -r roles/requirements.yml -p /home/greg/ansible/roles -m stdout
+
+ansible-galaxy roles  install -r roles/requirements.yml -p /home/greg/ansible/roles
 ansible-galaxy list
-
-
 
 7.
-ansible-galaxy roles init --init-path /home/greg/ansible/roles apache
-ansible-galaxy list
-vim roles/apache/tasks/main.yml
+ansible-galaxy role init --init-path /home/greg/ansible/roles apache
+
+vim ./roles/apache/tasks/main.yml
 ---
 - name: install httpd
   ansible.builtin.yum:
@@ -152,7 +147,7 @@ vim roles/apache/tasks/main.yml
     name: firewalld
     state: started
     enabled: yes
-- name: starte apache
+- name: start apache:
   ansible.posix.firewalld:
     service: http
     permanent: yes
@@ -161,34 +156,33 @@ vim roles/apache/tasks/main.yml
 - template:
     src: index.html.j2
     dest: /var/www/html/index.html
-vim roles/apache/template/index.html.j2
+vim roles/apache/template/index.html.2
 Welcome to {{ ansible_nodename }} on {{ ansible_default_ipv4.address }}
-vim apache.yml
---- 
+vim apache.yml 
+---
 - name: Use apache
   hosts: webservers
   roles:
   - apache
-ansible-navigator run apache.yml -m stdout
-ansible webservers --list-hosts
+ansible-navigator apache.yml -m stdout
 curl http://node3
 curl http://node4
+ansible webservers --list-hosts
 
 
 8.
 vim roles.yml
----
-- name: Use webservers
+--- 
+- name: use webservers role
   hosts: webservers
   roles:
   - phpinfo
-- name: Use balancers
+- name: use balancers role
   hosts: balancers
   roles:
   - balancer
 ansible-navigator run roles.yml -m stdout
-curl http://node5
-
+curl http://node5 
 
 9.
 vim lv.yml
@@ -197,7 +191,7 @@ vim lv.yml
   hosts: all
   tasks:
   - block:
-    - name: create 1500m
+    - name: create 1500
       community.general.lvol:
         vg: research
         lv: data
@@ -206,12 +200,12 @@ vim lv.yml
       community.general.filesystem:
         fstype: ext4
         dev: /dev/research/data
-    
+
     rescue:
-    - name: could not create that size
+    - name: Could not creat that size
       ansible.builtin.debug:
         msg: Could not create logical volume of that size
-    - name: create 800m
+    - name: create 800
       community.general.lvol:
         vg: research
         lv: data
@@ -222,54 +216,200 @@ vim lv.yml
         dev: /dev/research/data
     when: ansible_lvm.vgs.research is defined
   - debug:
-      msg:  Volume group done not exist
+      msg: Volume group done not exist
     when: ansible_lvm.vgs.research is not defined
 ansible-navigator run lv.yml -m stdout
 ansible all -m shell -a 'lvs'
-ansible all -m shell -a 'blikid /dev/research/data'
+ansible all -m shell -a 'blkid /dev/research/data'
 
-
-10.
 
 wget http://classroom/materials/hosts.j2
 vim hosts.j2
 {% for i in groups.all %}
-{{ hostvars[i].ansible_facts.default.ipv4.address }}{{ hostvars[i].ansible_facts.nodename }}{{ hostvars[i].ansible_facts.hostname }}
-{% endfor %}
+{{ hostvars[i].ansible_facts.default_ipv4.address }} {{
+hostvars[i].ansible_facts.nodename }} {{ hostvars[i].ansible_facts.hostname }}
 vim hosts.yml
 ---
 - name: gen host file
   hosts: all
   tasks:
-  - name: use host file
+  - name: genhost file
     template:
-      src: hosts.j2
+      src: /moe/greg/ansible/hosts.j2
       dest: /etc/myhosts
     when: inventory_hostname in groups.dev
-    
+
 ansible-navigator run hosts.yml -m stdout
 ansible dev -m shell -a 'cat /etc/myhosts'
 
-16
-wget  http://classroom/materials/salaries.yml 
-ansible-vault rekey --ask-vault-pass salaries.yml
-insecure8sure
-bbasyou9527
-bbsyou9527
-ansible-vault view salaries.yml
-ansibl-vault view --ask-vault-pass salaries.yml
 
-17
+
+11
+vim issue.yml
+---
+- name: modify file
+  hosts: all
+  tasks:
+  - name: modify conten1
+    ansible.builtin.copy:
+      content: 'Development'
+      dest: /etc/issue
+    when: inventory_hostname in groups.dev
+    - name: modify conten2
+    ansible.builtin.copy:
+      content: 'Test'
+      dest: /etc/issue
+    when: inventory_hostname in groups.test
+    - name: modify conten1
+    ansible.builtin.copy:
+      content: 'Production'
+      dest: /etc/issue
+    when: inventory_hostname in groups.prod
+ansible-navigator run issue.yml -m stdout
+ansible dev,test,prod -m shell -a 'cat /etc/issue'
+
+
+12.
+vim  webcontent.yml
+---
+- name: webcontentfile
+  hosts: dev
+  roles:
+  - apache
+  tasks:
+  - name: create directory
+    ansible.builtin.file:
+      path: /webdev
+      state: directory
+      group: webdev
+      mode: '2775'
+  - name: create link
+    ansible.builtin.file:
+      src: /webdev
+      dest: /var/www/html/webdev
+      state: link
+  - name: modify file
+    ansible.builtin.copy:
+      content: 'Development'
+      dest: /webdev/index.html
+      setype: httpd_sys_content_t
+ansible-navigator run webcontent.yml -m stdout
+curl http://node1/webdev
+
+13
+vim hwreport.yml
+---
+- name: general hwreport
+  hosts: all
+  tasks:
+  - name: get url:
+    ansible.builtin.get_url:
+      url: http://classroom/materials/hwreport.empty
+      dest: /root/hwreport.txt
+  - name: content1
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: "^HOST="
+      line: HOST={{ inventory_hostname }}
+  - name: content2
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: "^MEMORY="
+      line: MEMORY={{ ansible_memtotal_mb }}
+  - name: content3
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: "^BIOS="
+      line: BIOS={{ ansible_bios_version }}
+  - name: content4
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: "^DISK_SIZE_VDA="
+      line: DISK_SIZE_VDA={{ ansible_devices.vda.size }}
+  - name: content4
+    ansible.builtin.lineinfile:
+      path: /root/hwreport.txt
+      regexp: "^DISK_SIZE_VDB="
+      line: DISK_SIZE_VDB={{ ansible_devices.vda.size | default('NONE',true) }}
+
+ansible-navigator run hwreport.yml -m stdout
+ansible all -m shell -a 'cat /root/hwreport.txt'
+
+14.
+vim ansible.cfg
+vault_password_file= /home/greg/ansible/secret.txt
+echo whenyouwishuponastart > ./secret.txt
+ansible-vault create locker.yml
+---
+pw_developer: Imadev
+pw_manager: Imamgr
+
+ansible-vault view locker.yml 
+cat locker.yml
+
+15.
+wget http://classroom/materials/user_list.yml
+vim users.yml
+---
+- name: Add user1
+  hosts: dev,test
+  vars_files:
+  - /home/greg/ansible/locker.yml
+  - /home/greg/ansible/user_list.yml
+  tasks:
+  - name: Add group1
+    group:
+      name: devops
+      state: present
+  - name: Add user1
+    user:
+      name: "{{ item.name}}"
+      groups: devops
+      password: "{{ pw_developer | password_hash('sha512') }}"
+      password_expire_max: "{{ item.password_expire_max }}"
+    loop: "{{ users }}"
+    when: item.job='developer'
+- name: Add user2
+  hosts: prod
+  vars_files:
+  - /home/greg/ansible/locker.yml
+  - /home/greg/ansible/user_list.yml
+  tasks:
+  - name: Add group2
+    group:
+      name: opsmgr
+      state: present
+  - name: Add user2
+    user:
+      name: "{{ item.name}}"
+      groups: opsmgr
+      password: "{{ pw_manager  | password_hash('sha512') }}"
+      password_expire_max: "{{ item.password_expire_max}}"
+    loop: "{{ users }}"
+    when: item.job='manager'
+ansible-navigator run users.yml -m stdout
+ansible dev,test -m shell -a 'id bob;id sally ; id fred'
+ansible prod -m shell -a 'id bob;id sally'
+ssh bob@node1
+ssh sally@node3
+
+16.
+wget http://classroom/materials/salaries.yml
+ansible-vault rekey --ask-vault-pass salaries.yml
+ansible-vault view --ask-vault-pass salaries.yml
+
+17.
 vim cron.yml
 ---
-- name: crontab
+- name: create conjob
   hosts: test
   tasks:
-  - name: crontab1
+  - name: cronjob1
     cron:
-      name: "crontab"
+      name: cronjob1
       minute: '*/2'
       job: 'logger "EX200 in progress"'
       user: natasha
-ansible-navigator run cron.yml -m stdout
+ansible-navigator run cron.yml -m stdou
 ansible test -m shell -a 'crontab -l -u natasha'
+错题:9,10,11,13
