@@ -1,0 +1,358 @@
+1.
+virt-manager 
+登录 servera
+nmcli con show
+
+nmcli con mod 'Wired connection 1' ipv4.method manual ipv4.addresses 172.25.250.100/24 ipv4.gateway 172.25.250.2554  ipv4.dns 172.25.250.254 autoconnect yes
+
+nmcli con up 'Wired connection 1'
+
+ip a
+
+#主机终端
+ssh root@172.25.250.100
+
+hostnamectl set-hostname node1.domain250.example.com
+
+#检查
+ip a
+
+hostname 
+
+2.
+vim /etc/yum.repos.d/rhcsa.repo
+[Base]
+name=Base
+baseurl=http://content/rhel9.0/x86_64/dvd/BaseOS
+enabled=1
+gpgcheck=no
+[App]
+name=App
+baseurl=http://content/rhel9.0/x86_64/dvd/AppStream
+enabled=1
+gpgcheck=no
+
+yum repoinfo
+
+yum install -y vsftpd
+
+3
+yum provides "*/semanage"
+
+yum -y install policycoreutils-python-utils
+
+semanage fcontext -m -t httpd_sys_content_t /var/www/html/file1
+
+semanage port -a -t http_port_t -p tcp 82
+
+restorecon -Rv /var/www/html
+
+firewall-cmd --permanent --add-service=http
+
+firewall-cmd --permanent --add-port=82/tcp
+
+firewall-cmd --reload
+
+systemctl restart httpd
+
+systemctl enable --now httpd
+
+#验证 
+curl http://node1.domain250.example.com:82/file1
+
+
+
+4.
+groupadd sysmgrs
+useradd -G sysmgrs natasha
+useradd -G sysmgrs harry
+useradd -s /bin/false sarah
+echo flectrag | passwd --stdin natasha
+echo flectrag | passwd --stdin harry
+echo flectrag | passwd --stdin sarah
+
+5.
+systemctl status crond
+
+systemctl enable crond
+
+crontab -e -u harry
+23 14 * * * /usr/bin/echo hello
+
+crontab -l -u harry
+
+
+6.
+mkdir /home/managers
+
+chgrp sysmgrs /home/managers
+
+chmod 2770 /home/managers
+
+#验证
+ll -Z /home
+
+7
+yum -y install chrony
+
+vim /etc/chrony.conf
+#server  _gateway iburst
+server materials.example.com iburst
+
+systemctl restart chronyd
+
+systemctl enable chronyd
+
+#验证
+date -s '1982-1-1'
+
+systemctl restart chronyd
+
+date 
+
+8.
+yum -y install nfs-utils
+yum -y install autofs
+showmount -e materials.example.com
+vim /etc/auto.master
+#/misc /etc/auto.misc
+/rhome /etc/auto.rhome
+
+vim /etc/auto.rhome
+remoteuser1 -rw materials.example.com: /rhome/remoteuser1
+
+systemctl enable --now autofs
+
+#验证
+ll /rhome
+ssh remoteuser1@localhost
+flectrag
+
+pwd
+
+touch my.file
+
+mount |grep rhome
+
+
+9.
+useradd -u 3533 manalo
+echo flectrag | passwd --stdin manalo
+
+10.
+mkdir /root/findfiles
+
+find / -user jacques
+
+find / -user jacques -exec cp -a {} /root/findfiles \;
+
+ll /root/findfiles/
+
+11.
+grep ng /usr/sahre/xml/iso-codes/iso_639_3.xml
+
+grep ng /usr/share/xml/iso-codes/iso_639_3.xml > /root/list 
+
+cat /root/list
+
+
+12
+yum -y install bzip2
+
+tar -cvjf /root/backup.tar.bz2  /usr/local
+
+file /root/backup.tar.bz2
+
+13
+yum -y install container-tools
+
+ssh wallah@node1
+
+podman login -u admin -p redhat321 regitry.lab.example.com
+
+wget http://classroom/Containerfile
+
+podman build -t pdf .
+
+14
+sudo mkdir /opt/{file,progress}
+
+sudo chown wallah:wallah /opt/{file,progress}
+
+podman run -d --name ascii2pdf -v /opt/file:/dir1:Z -v /opt/progress:/dir2:Z pdf
+
+podman ps -a
+
+mkdir -p ~/.config/systemd/user
+
+cd ~/.config/systemd/user/
+
+podman generate systemd -n ascii2pdf -f --new 
+
+ls
+
+podman stop ascii2pdf
+
+podman rm ascii2pdf
+
+podman ps -a
+
+systemctl --user daemon-reload
+
+systemctl --user enabled --now container-ascii2pdf
+
+systemctl --user status container-ascii2pdf
+
+podman ps 
+
+loginctl enable-linger
+
+loginctl show-user wallah
+
+exit
+
+reboot
+
+ssh wallah@node1
+
+podman ps
+
+15
+visudo
+%wheel
+% sysmgrs ALL=(ALL) NOPASSWD: ALL
+
+#验证
+su - natasha
+sudo cat /etc/shadow
+
+
+16
+打开virt-manager
+serverb 重启
+按e
+512m后面加上 rw rd.brek
+ctrl+X
+
+chroot /sysroot
+
+echo flectrag | passwd --stdin root
+
+touch /.autorelabel
+
+sync
+
+exit
+
+reboot
+
+输入root
+flectrag
+
+
+17.
+ssh root@node2
+
+vim /etc/yum.repos.d/rhcsa.repo
+
+[Base]
+name=Base
+baseurl=http://content/rhel9.0/x86_64/dvd/BaseOS
+enabled=1
+gpgcheck=no
+[App]
+name=App
+baseurl=http://content/rhel9.0/x86_64/dvd/AppStream
+enabled=1
+gpgcheck=no
+
+# 检查
+yum repoinfo
+yum -y install ftp
+
+18
+lvscan
+
+lvextend -L 230M /dev/myvol/vo
+
+blkid /dev/myvol/vo
+
+resize2fs /dev/myvol/vo
+
+df -h
+
+19
+lsblk
+
+disk /dev/vdb
+  按n
+  enter
+  enter
+  +512M
+
+  w保存
+
+fdisk -l /dev/vdb
+显示几号下一步就是那个路径
+
+mkswap /dev/vdb3
+
+vim /etc/fstab
+/dev/vdb3 swap swap defaults 0 0
+
+swapon -a
+
+swapon
+
+
+20
+lsblk
+
+fdisk /dev/vdc
+
+  按n
+
+  按p
+
+  enter 
+
+  enter
+
+  +1200M
+
+  w保存
+
+vgcreate -s 16m qagroup /dev/vdc1
+
+lvcreate -l 60 -n qa qagroup
+
+yum provides */mkfs.vfat
+
+yum -y install dosfstools
+
+mkfs.vfat /dev/qagroup/qa
+
+mkdir /mnt/qa
+
+vim /etc/fctab
+/dev/qagroup/qa /mnt/qa vfat defaults 0 0
+
+mount -a
+
+#检查
+df -Th
+
+
+21
+yum -y install tuned
+
+systemctl enable tuned
+
+systemctl restart tuned
+
+tuned-adm active
+
+tuned-adm recomend
+
+#检查
+tuned-adm profile virtual-guest

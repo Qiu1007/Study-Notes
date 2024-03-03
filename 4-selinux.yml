@@ -1,5 +1,0 @@
-# sudo yum -y install rhel-system_roles
-# cp /usr/share/doc/rhel-system_roles/selinux/examplex.yml /home/greg/ansible/selinux.yml
-# ansible-playbook selinux.yml
-
-#ansible all -m shell -a 'grep ^SELINUX= /etc/selinux/config;getenforce'
