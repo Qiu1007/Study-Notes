@@ -334,7 +334,7 @@ mkfs.vfat /dev/qagroup/qa
 
 mkdir /mnt/qa
 
-vim /etc/fctab
+vim /etc/fstab
 /dev/qagroup/qa /mnt/qa vfat defaults 0 0
 
 mount -a
@@ -352,7 +352,7 @@ systemctl restart tuned
 
 tuned-adm active
 
-tuned-adm recomend
+tuned-adm recommend
 
 #检查
 tuned-adm profile virtual-guest
