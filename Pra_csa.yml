@@ -90,7 +90,7 @@ chgrp sysmgrs /home/managers
 chmod 2770 /home/managers
 
 #验证
-ll -Z /home
+ll -Z /home/managers
 
 7
 yum -y install chrony
